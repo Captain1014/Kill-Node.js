@@ -36,7 +36,6 @@ error because some operation is not supported by the supplied type(s) - TypeErro
 error because an attempt is being made to access a variable that is not defined - ReferenceError
 
 ⭐️ Question 2 (1 point)
-Question 2 options:
 A [ ] is an object that conists of a function and the environment that it was created in...
 class?
 answer: closure
