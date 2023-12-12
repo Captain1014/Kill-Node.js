@@ -28,7 +28,6 @@ sayHello.call(person); // Output: Hello, John
 
 ```
 
-
   * `.bind()`?
 - Arrow function : .bind() has no effect on its this binding. The arrow function retains "this" value from its lexical scope
 ```js
@@ -119,6 +118,26 @@ const index = numbers.indexOf(3);
 console.log(index); // Output: 2
 
 ```
+```js
+// midterm qs 1
+// create two higher functions 'negate' and 'partition'. Do not use any regular loops.
+// negate(oldFn) - (a decorator) returns a function that calls oldFn (the function passed in), and returns the opposite of oldFn's return value.
+// assume that oldFn will return a boolean; no need to validate.
+const negate = (oldFn) => {
+  return (...args) => !oldFn(...args);
+}
+// partition(arr, fn) - takes an array of values and partitions it into two Arrays by calling the function, fn, on every element.
+// if fn returns true, the element is added to the first array, otherwise it's added to the second.
+// both arrays are returned nested in a containing array.
+const partition = (arr, fn) => {
+  return arr.reduce((result, element) => {
+    const index = fn(element) ? 0 : 1;
+    result[index].push(element);
+    return result;
+  }, [[], []]);
+}
+
+```
  
 * Async
   * callback
@@ -175,7 +194,7 @@ fetchDataAndPrint();
 ### Express
 
 === LIKELY CODING QUESTION ===
-example question: Create a simple Express application that serves an HTML page using Handlebars. The HTML page should display a message with a variable value passed from the server. 
+- example question: Create a simple Express application that serves an HTML page using Handlebars. The HTML page should display a message with a variable value passed from the server. 
 ```js
 // app.js
 const express = require('express');
@@ -205,27 +224,137 @@ app.listen(3000);
 
 ```
 
+```js
+// midterm qs
+// Adds a new property to the req object, cookiejar, for every incoming request.
+// cookiejar contain name and value pairs in an object as the cookies
+const myFunction=(req,res,next)=>{
+  req.cookieJar ={};
+  const s = req.headers.cookie;
+  if (s) {
+    req.cookieJar = s.split(';').reduce((obj, pair) => {
+      const [k,v] = pair.trim().split('=');
+      obj[k] = v;
+      return obj
+    }, {})
+  }
+ next();
+}
+app.use(myFunction);
+```
+```js
+// midterm qs 2
+// the web app consists of a single path, /home. This path displays a form and a list of links.
+// when the form is submitted, a new link is displayed at the bottom of the list of links as an <a> tag.
+// the url entered in the form is the href and the description is the link text.
+// however, if the url is the same as another url that's already in data:
+// the duplicate link is not added to the data array
+// instead, a duplicate error message is shown on the page.
+// if there's a successful new url added, refreshing the page should not result in a form resubmission.
+// if the initial form submission was not successful, it's ok if refreshing the page cause a resubmission.
+// write only the route handlers necessary to implement this.
+// you must use the home.hbs template below to guide your implementation
+
+// views/home.hbs
+{{#if errorMsg}}<div>{{ errorMsg }}</div> {{/if}}
+
+<form method="POST" action="">
+  <label>url</label> <input type="text" name="url">
+  <label>desc</label> <input type="text" name="description">
+  <input type="submit" value="add link">
+</form>
+
+<ul>
+{{#each links}}
+<li>
+<a href="{{url}}">{{description}}</a>
+</li>
+{{/each}}
+</ul>
+```
+```js
+//app.js
+// assume all imports, middleware, and express set up are already present
+const data = [
+  {url: 'https://cs.nyu.edu', description: 'nyu'},
+   {url: 'https://cs.ucla.edu', description: 'ucla'},
+
+]
+// complete this code
+// route handler for the home page
+app.get('/home', (req,res) => {
+  res.render('home', {links: data, errorMsg: req.session ? req.session.errorMsg : null});
+});
+
+// route handler for form submission
+app.post('/home', (req,res) => {
+  const url = req.body.url;
+  const description = req.body.description;
+
+  // check for duplicate urls
+  const isDuplicate = data.some((link) => link.url === url);
+
+  if(isDuplicate){
+    res.render('home', {links: data, errorMsg: 'Duplicate url'});
+  } else {
+    data.push({url, description});
+    req.session.errorMsg = null;
+    res.redirect('/home');
+  }
+
+
+});
+
+app.listen(3000);
+
+```
+
+
 ## HTTP/HTTPS Protocal
 
 * http request/response syntax
+```html
+// midterm qs
+// Form
+<form method="POST" action="">
+<input type="text" name="mystery">
+<input type="submit" value="Go!">
+</form>
+// resulting page
+<h1>Egg</h1>
+<img src="egg.gif" />
 ```
-// request
-GET /about HTTP/1.1
-Host: localhost:8080
-Connection: keep-alive
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.124 Safari/537.36
-Accept-Encoding: gzip,deflate,sdch
-Accept-Language: en-US,en;q=0.8
-* https
 
-// response
+* write  2 http requests and 2 responses in the order after the submit button is pressed so that the entire page is rendered by the browser. After this interaction, the browser will have a cookie named 'meal' set to 'breakfast'
+
+// request 1
+// the text field is filled with "extra"
+```
+POST /food HTTP/1.1
+Content-Type: x-www-form-urlencoded
+
+mystery=extra 
+```
+// response 1
+```
 HTTP/1.1 200 OK
 Content-Type: text/html
-Date: Tue, 07 Oct 2014 03:38:37 GMT
-Connection: keep-alive
-Transfer-Encoding: chunked
+
+html as body
 ```
+// request 2
+```
+GET /egg.gif HTTP/1.1
+```
+// response 2
+```
+HTTP/1.1 200 OK
+Content-Type: image/gif
+
+image data as body
+Set-Cookie: meal=breakfast
+```
+
 ### Some data transferred via HTTP
 
 * sessions
@@ -243,6 +372,8 @@ Transfer-Encoding: chunked
 7. the session store (can be in-memory, file-based or database)
 8. In the session store : user's session (auth)
 
+* Q. in express, name all values that are stored on the client if a session variable named 'darkMode' is set to true?
+  - a cookie named darkMode set to true 
 ````
 // response that sets a few cookie values
 HTTP/1.0 200 OK
@@ -359,29 +490,87 @@ User.deleteOne({ username: 'john_doe' })
 ### DOM
 
 * What is DOM, how it is mananged
+  - DOM is a programming interface for interacting with html objects.
 * get/insert/change DOM Nodes
+  
 * add events
 
 ```js
-document.getElementById();
-document.getElementsByClass();
-document.getElementsByTagName();
-...
+// Getting DOM Nodes
+document.getElementById("myID");
+document.getElementsByClassName("myClass");
+document.getElementsByTagName("div");
+
+// Inserting and changing
+document.createElement("div");
+parentElement.appendChild(newElement);
+element.innerHTML = "New content";
+
+```
+```html
+// Add events
+<button id="myButton">Click me</button>
+
+<script>
+    var button = document.getElementById("myButton");
+
+    button.addEventListener("click", function() {
+        alert("Button clicked!");
+    });
+</script>
+
+
 ```
 
 ### AJAX
 
 * how to handle Promise
-* `fetch()`
-
-#### XMLHttpRequest
-
+  - Promises are used to handle "asynchronous" operations.
 ```js
-const req = new XMLHttpRequest();
-req.open(...);
-req.send();
+// creating a promise
+const myPromise = new Promise((resolve, reject) => {
+    // Asynchronous operation or task
+
+    if (/* operation successful */) {
+        resolve("Success!"); // Resolve with a value
+    } else {
+        reject("Error!"); // Reject with an error message
+    }
+});
+
+// handling promises
+myPromise
+    .then((result) => {
+        console.log("Promise resolved:", result);
+    })
+    .catch((error) => {
+        console.error("Promise rejected:", error);
+    })
+    .finally(() => {
+        console.log("Finally block, regardless of success or failure.");
+    });
+
+```
+* `fetch()`
+  - a modern alternative to "XMLHttpRequest" for making http requests. It returns a Promise that resolves to the http response.
+```js
+fetch('https://api.example.com/data')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Data:', data);
+    })
+    .catch(error => {
+        console.error('Fetch Error:', error);
+    });
+
 ```
 
+ 
 ## Websocket & socket.io
 
 === LIKELY CODING QUESTION ===
@@ -404,8 +593,15 @@ Client-side:
 <script>
     // instantiate 
     const socket = io();
-    // when client receive message, do something
-    socket.on("message_name", (msg)=>{console.log(msg)});
+    // listen for lessage from the server, log the message
+    socket.on("message_name", (msg)=>{
+      console.log(msg)
+    
+   // Display the received message on the page
+    const messageElement = document.createElement('p');
+    messageElement.textContent = msg;
+    document.body.appendChild(messageElement);
+    });
     // when client sent message to server
     document.getElementById("btn").addEventListener("onClick", ()=>{
         // send {"message_name": "content"} to server
@@ -424,9 +620,11 @@ const app = express();
 const io = new Server(createServer(app));
 // when server get connection from new client
 io.on('connection', (socket)=>{
+    // welcome message
+    socket.emit('greeting', {msg: 'hello'});
     // when server receive message, do something
     socket.on('message_name', (msg)=>{
-
+      console.log(msg);
     });
     // when server boardcasting message (e.g. the winning message from lab)
     io.emit("message_name", "msg");
@@ -552,11 +750,19 @@ KeyFrame:
 ### class Component (taught in previous years)
 
 ### function Component
+- function component returns a react element. 
+1. useState : Once state changes, component re-renders.
+2. useRef : does not cause a re-render. allows reference to DOM element.
+3. useEffect : calls function on event
+- useEffect(f, depArray)
+  - no array: call on render
+  - if '[]': call on mount
+  - if [val]: call when van changes and on mount
 
 Simple use case with `useState()` and `useEffect()`
 
 ```js
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef} from "react";
 
 const Component = (prop) => {
     const [bar, setBar] = useState("initial value");
@@ -569,9 +775,23 @@ const Component = (prop) => {
     }, []);
     // the callback function will trigger when url is Updated
     useEffect(()=>{
-        async function fetchAPI(url) {}
-        fetchAPI(url);
-    }, [url]);
+      let cancel = false;
+        async function fetchAPI() {
+          // fetch api here
+          const res = await fetch(url)
+          const data = await res.json()
+          if(!cancel){
+            setData(url);
+          }
+        }
+
+          if(url!==null){
+            fetchAPI()
+          }
+          return () => {
+            cancel = true
+            }
+    }, [url]); // useEffect gets triggered whenever url changes
 
     const onClick = () => {
         setBar("New Value"); // when state bar changes, the element will re-render
@@ -584,4 +804,43 @@ const Component = (prop) => {
 const SubComponent = (prop) => {
     return <div onClick={prop.onClick}> {prop.foo} </div>
 }
+
+// useRef
+function App() {
+  const [name, setName] = useState('') // once submit name, show up below
+  const nameInput = useRef(null) // useRef is a Hook that provides a mutable object called ref which has a current property.
+
+  return (
+    <>
+    your name <input ref={nameInput} type="text" />
+    <button onClick={evt => setName(nameInput.current.value)}>submit</button>
+    <h1>hello {name}</h1>
+    </>
+  )
+}
+```
+- When do we use prop:
+  - to deliver data to the child component. Include 'props' in the child component. 
+```js
+// ParentComponent.js
+import React from "react";
+import ChildComponent from "./ChildComponent";
+
+const ParentComponent = () => {
+  const message = "Hello from ParentComponent";
+
+  return <ChildComponent message={message} />;
+};
+
+export default ParentComponent;
+
+// ChildComponent.js
+import React from "react";
+
+const ChildComponent = (props) => {
+  return <div>{props.message}</div>;
+};
+
+export default ChildComponent;
+
 ```
